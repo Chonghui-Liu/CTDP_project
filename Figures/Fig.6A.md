@@ -1,4 +1,4 @@
-## Fig6.A
+## Fig6.A,B
 ### Download and preprocess the single-cell data of Liver cirrhosis
 ```r
   library(Seurat)
