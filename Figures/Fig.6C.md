@@ -70,7 +70,7 @@
   Livercirrhosis_sc_data_downsampled@meta.data[1:5,8:17]
   
   
-  cairo_pdf(paste0("/data/chliu/Supervised_Phen_subpopulations_project/figures of graduation/Livercirrhosis_sc_data_downsampled_logistic_pred_UMAP.pdf"))
+  cairo_pdf(paste0("Livercirrhosis_sc_data_downsampled_logistic_pred_UMAP.pdf"))
   DimPlot(Livercirrhosis_sc_data_downsampled, group.by = "logistic_pred_labels", reduction = "umap", label = F, repel = TRUE,pt.size = 0.5) + NoLegend()+theme(aspect.ratio=1, legend.position = "right")
   dev.off()
    
