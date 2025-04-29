@@ -5,12 +5,12 @@
 we developed CTDP (Identification of Cell Types associated with Disease Phenotypes), a novel framework based on Lasso-regularized logistic regression, augmented with permutation testing and false discovery rate correction. CTDP is designed to robustly identify phenotype-associated cell clusters from high-dimensional single-cell data.
 
 <p align="center">
-<img src=workflow.png height="365" width="890">
+<img src=workflow.tif height="365" width="890">
 </p>
 
 ### How to cite `CTDP` ###
 Please cite the following manuscript:
-> *DrugReSC: Targeting disease-critical cell subpopulations with single-cell transcriptomic data for drug repurposing in cancer*. 
+> *Identification of Cell Types associated with Disease Phenotypes*. 
 Chonghui Liu, and Guohua Wang<br />
 
 ### Support ##
