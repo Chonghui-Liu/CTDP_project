@@ -10,7 +10,7 @@ we developed CTDP (Identification of Cell Types associated with Disease Phenotyp
 
 ### How to cite `CTDP` ###
 Please cite the following manuscript:
-> *CTDP: Identifying cell types associated with disease phenotypes using scRNA-seq data DOI：10.1101/2025.10.16.682537*. 
+> *CTDP: Identifying cell types associated with disease phenotypes using scRNA-seq data DOI：10.1101/2025.10.16.682537  https://www.biorxiv.org/cgi/content/short/2025.10.16.682537v1*. 
 Chonghui Liu, Murong Zhou and Guohua Wang et al.<br />
 
 ### Support ##
