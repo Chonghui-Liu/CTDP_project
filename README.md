@@ -10,8 +10,8 @@ we developed CTDP (Identification of Cell Types associated with Disease Phenotyp
 
 ### How to cite `CTDP` ###
 Please cite the following manuscript:
-> *Identification of Cell Types associated with Disease Phenotypes*. 
-Chonghui Liu, and Guohua Wang<br />
+> *CTDP: Identifying cell types associated with disease phenotypes using scRNA-seq data DOI：10.1101/2025.10.16.682537*. 
+Chonghui Liu, Murong Zhou and Guohua Wang et al.<br />
 
 ### Support ##
 If you have any question regarding the use of CTDP, feel free to submit an [issue](https://github.com/Chonghui-Liu/CTDP_project/issues).
