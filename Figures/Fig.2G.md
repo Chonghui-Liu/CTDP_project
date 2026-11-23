@@ -1,118 +1,93 @@
-## Fig2.G
-### calculate F1 and generate box plot
+## Fig.2G
+### The Chi-square algorithm is executed
 ```r
-load("/data/chliu/Supervised_Phen_subpopulations_project/test/PBMC_Travaglini_SC_cluster0to9labeled_list.rdata")
-  
-  
-  load("/data/chliu/Supervised_Phen_subpopulations_project/test/logistic_result_list.rdata")
-  library(dplyr)
-  library(caret)
-  logistic_f1_vector <- numeric(length(logistic_result_list))
-  for (i in seq_along(logistic_result_list)) {
-    logistic_result <- logistic_result_list[[i]]
+    load("E:/project/Supervised_Phen_subpopulations_project/test/PBMC_Travaglini_SC_cluster0to9labeled_list.rdata")
+    library(dplyr)
+    
+    chi_square_test <- function(df) {
+      
+      if (!all(c("cluster", "phenotype") %in% colnames(df))) {
+        stop("data_frame must contain 'cluster' and 'phenotype' column。")
+      }
+      
+      clusters <- unique(df$cluster)
+      
+      p_values <- sapply(clusters, function(cl) {
+        
+        in_cluster <- df$cluster == cl
+        
+        contingency_table <- table(
+          Cluster = factor(in_cluster, levels = c(FALSE, TRUE)),
+          Phenotype = factor(df$phenotype, levels = c(0, 1))
+        )
+        
+        test_result <- suppressWarnings(
+          chisq.test(contingency_table, correct = FALSE)
+        )
+        
+        return(test_result$p.value)
+      })
+      
+      FDR <- p.adjust(p_values, method = "BH")
+      
+      positive_rate <- sapply(clusters, function(cl) {
+        mean(df$phenotype[df$cluster == cl] == 1, na.rm = TRUE)
+      })
+      
+      result <- data.frame(
+        Cluster = clusters,
+        Positive_Rate = positive_rate,
+        P_Value = as.vector(p_values),
+        FDR = as.vector(FDR),
+        row.names = paste0("cluster", clusters)
+      )
+      
+      return(result)
+    }
+    
+    chi_square_result_list <- lapply(
+      PBMC_Travaglini_SC_cluster0to9labeled_list,
+      function(seurat_obj) {
+        
+        df <- data.frame(
+          cluster = seurat_obj@meta.data$seurat_clusters,
+          phenotype = seurat_obj@meta.data$source_phen
+        )
+        
+        chi_square_test(df)
+      }
+    )
+    
+    save(
+      chi_square_result_list,
+      file = "E:/project/Supervised_Phen_subpopulations_project/test/chi_square_result_list.rdata"
+    )
+    
+``````
+### Generate an UMAP plot
+```r
+    load("E:/project/Supervised_Phen_subpopulations_project/test/PBMC_Travaglini_SC_cluster0to9labeled_list.rdata")
+    i = 2
+    print(names(PBMC_Travaglini_SC_cluster0to9labeled_list)[i])
     seurat_obj <- PBMC_Travaglini_SC_cluster0to9labeled_list[[i]]
-    significant_clusters <- rownames(logistic_result[logistic_result$FDR < 0.05, ])
+    
+    
+    load("E:/project/Supervised_Phen_subpopulations_project/test/chi_square_result_list.rdata")
+    chi_square_result <- chi_square_result_list[[i]]
+    significant_clusters <- rownames(chi_square_result[chi_square_result$FDR < 0.05, ])
+    print(significant_clusters)
+    
     pred_labels <- as.data.frame(
       ifelse(seurat_obj@meta.data$seurat_clusters %in% as.numeric(gsub("cluster", "", significant_clusters)), 1, 0)
     )
-    colnames(pred_labels) <- "logistic_pred_labels"
+    table(pred_labels)
+    colnames(pred_labels) <- "chi_square_pred_labels"
     rownames(pred_labels) <- rownames(seurat_obj@meta.data)
     seurat_obj <- AddMetaData(seurat_obj, metadata = pred_labels)
-    groundtruth_labels <- seurat_obj@meta.data$groundtruth
-    predicted_labels <- seurat_obj@meta.data$logistic_pred_labels
-    confusion <- confusionMatrix(factor(predicted_labels), factor(groundtruth_labels))
-    f1_score <- confusion$byClass["F1"]
-    logistic_f1_vector[i] <- f1_score
-  }
-  
-  
-  load("/data/chliu/Supervised_Phen_subpopulations_project/test/scDist_result_list.rdata")
-  scDist_f1_vector <- numeric(length(scDist_result_list))
-  for (i in seq_along(scDist_result_list)) {
-    scDist_result <- scDist_result_list[[i]]
-    seurat_obj <- PBMC_Travaglini_SC_cluster0to9labeled_list[[i]]
-    significant_clusters <- rownames(scDist_result$results[scDist_result$results$p.val < 0.05, ])
-    print(significant_clusters)
-    pred_labels <- as.data.frame(
-      ifelse(seurat_obj@meta.data$seurat_clusters %in% as.numeric(significant_clusters), 1, 0)
-    )
-    colnames(pred_labels) <- "scDist_pred_labels"
-    rownames(pred_labels) <- rownames(seurat_obj@meta.data)
-    print(table(pred_labels))
-    seurat_obj <- AddMetaData(seurat_obj, metadata = pred_labels)
-    groundtruth_labels <- seurat_obj@meta.data$groundtruth
-    predicted_labels <- seurat_obj@meta.data$scDist_pred_labels
-    confusion <- confusionMatrix(factor(predicted_labels), factor(groundtruth_labels))
-    f1_score <- confusion$byClass["F1"]
-    scDist_f1_vector[i] <- f1_score
-  }
-  
-  
-  load("/data/chliu/Supervised_Phen_subpopulations_project/test/da_cells_list.rdata")
-  DAseq_f1_vector <- lapply(seq_along(PBMC_Travaglini_SC_cluster0to9labeled_list), function(i) {
-    sc_data <- PBMC_Travaglini_SC_cluster0to9labeled_list[[i]]
-    da_cells <- da_cells_list[[i]]  
+    seurat_obj@meta.data[1:5, 16:ncol(seurat_obj@meta.data)]
     
-    pred_labels <- rep(0, nrow(sc_data@meta.data))
-    pred_labels[da_cells$da.down] <- 1
-    pred_labels <- as.data.frame(pred_labels)
-    colnames(pred_labels) <- "DAseq_pred_labels"
-    rownames(pred_labels) <- rownames(sc_data@meta.data)
-    print(table(pred_labels))
-    
-    sc_data <- AddMetaData(sc_data, metadata = pred_labels)
-    
-    groundtruth_labels <- sc_data@meta.data$groundtruth
-    predicted_labels <- sc_data@meta.data$DAseq_pred_labels
-    
-    confusion <- confusionMatrix(factor(predicted_labels), factor(groundtruth_labels))
-    f1_score <- confusion$byClass["F1"]
-    
-    return(f1_score)
-  })
-  DAseq_f1_vector <- unlist(DAseq_f1_vector)
-  
-  
-  PENCIL_f1_vector <- numeric(length(PBMC_Travaglini_SC_cluster0to9labeled_list))
-  library(Seurat)
-  PENCIL_f1_vector <- sapply(seq_along(PBMC_Travaglini_SC_cluster0to9labeled_list), function(i) {
-    sc_data <- PBMC_Travaglini_SC_cluster0to9labeled_list[[i]]
-    
-    pred_labels <- read.csv(paste0("/data/chliu/Supervised_Phen_subpopulations_project/test/PBMC_Travaglini_SC_cluster", i-1, "labeled_PENCILpred_labels.csv"), header = FALSE)
-    colnames(pred_labels) <- "PENCIL_pred_labels"
-    rownames(pred_labels) <- rownames(sc_data@meta.data)
-    
-    sc_data <- AddMetaData(sc_data, metadata = pred_labels)
-    
-    groundtruth_labels <- sc_data@meta.data$groundtruth
-    predicted_labels <- sc_data@meta.data$PENCIL_pred_labels
-    predicted_numeric <- ifelse(predicted_labels == "1.0", 1, 0)
-    confusion <- confusionMatrix(factor(predicted_numeric), factor(groundtruth_labels))
-    f1_score <- confusion$byClass["F1"]
-    
-    return(f1_score)
-  })
-  
-  
-  library(ggplot2)
-  f1_data <- data.frame(
-    F1_Score = c(logistic_f1_vector, scDist_f1_vector, DAseq_f1_vector, PENCIL_f1_vector),
-    Method = factor(rep(c("Logistic", "scDist", "DAseq", "PENCIL"), each = length(logistic_f1_vector)))
-  )
-  cairo_pdf("/data/chliu/Supervised_Phen_subpopulations_project/figures of graduation/methods_comparision_sample1cluster.pdf")
-  ggplot(f1_data, aes(x = Method, y = F1_Score, fill = Method)) +
-    geom_boxplot() +
-    labs(title = "Comparison of F1 Scores across Different Methods",
-         x = "Method",
-         y = "F1 Score") +
-    theme_minimal() +
-    theme(
-      legend.position = "none",
-      panel.border = element_rect(color = "black", fill = NA, size = 1),
-      panel.grid = element_blank()
-    ) +
-    scale_fill_brewer(palette = "Set3")
-  dev.off()
-
-
+    cairo_pdf(paste0("E:/project/Supervised_Phen_subpopulations_project/figures of graduation/", names(PBMC_Travaglini_SC_cluster0to9labeled_list)[i], "_chi_square_pred_UMAP.pdf"))
+    DimPlot(seurat_obj, group.by = "chi_square_pred_labels", reduction = "umap", label = F, repel = TRUE, pt.size = 0.5) + NoLegend() + theme(aspect.ratio = 1, legend.position = "right")
+    dev.off()
+       
 ``````
