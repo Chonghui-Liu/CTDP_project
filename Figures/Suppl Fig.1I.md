@@ -1,4 +1,3 @@
-## Fig2.I
 ### Draw a box plot comparing several methods based on GSE182227 data
 ```r
 # ============================================================
