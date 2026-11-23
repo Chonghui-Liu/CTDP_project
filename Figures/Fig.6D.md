@@ -22,24 +22,29 @@
   Cirrhotic_associatedcells_sig$names <- rownames(Cirrhotic_associatedcells_sig)
   save(Cirrhotic_associatedcells_sig,file = "Livercirrhosis_Cirrhotic_associatedcells_sig.rdata")
   
-  
-  library(Seurat)
-  library(ggplot2)
-  Idents(Livercirrhosis_sc_data_downsampled) <- Livercirrhosis_sc_data_downsampled@meta.data$condition
-  signature_genes <- rownames(Cirrhotic_associatedcells_sig)[1:10] 
-  cairo_pdf(paste0("Dot_plot_Livercirrhosis_markers_logistic_subpopulations.pdf"), width = 10, height = 5)
-  DotPlot(Livercirrhosis_sc_data_downsampled, features = signature_genes,group.by = "condition") + 
-    scale_color_gradient2(low = "lightblue", high = "darkred", mid = "white", midpoint = 0) +
-    theme_minimal() +
-    labs(title = "Expression Levels of Signature Genes in Predicted Phenotypes",
-         x = "Signature Genes",
-         y = "condition Group") +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1),
-          axis.text.y = element_text(size = 10),
-          axis.title = element_text(size = 14, face = "bold"),          
-          axis.line = element_line(color = "black", size = 0.8),
-          panel.grid.major = element_line(color = "gray80", size = 0.5), 
-          panel.grid.minor =  element_blank()
+    library(Seurat)
+    library(ggplot2)
+    Livercirrhosis_sc_data_downsampled$logistic_pred_labels <- factor(
+      Livercirrhosis_sc_data_downsampled$logistic_pred_labels,
+      levels = c(1, 0),
+      labels = c("Cirrhosis-associated cells", "Other cells")
     )
-  dev.off()  
+    Idents(Livercirrhosis_sc_data_downsampled) <- Livercirrhosis_sc_data_downsampled@meta.data$logistic_pred_labels
+    signature_genes <- rownames(Cirrhotic_associatedcells_sig)[1:10] 
+    cairo_pdf(paste0("E:/project/Supervised_Phen_subpopulations_project/figures of graduation/Dot_plot_unscaled_Livercirrhosis_markers_logistic_subpopulations.pdf"), width = 10, height = 5)
+    DotPlot(Livercirrhosis_sc_data_downsampled, features = signature_genes,group.by = "logistic_pred_labels",scale = FALSE) + 
+      scale_color_gradient(low = "lightblue", high = "darkred") +
+      theme_minimal() +
+      labs(title = "Expression Levels of Signature Genes in Predicted Phenotypes",
+           x = "Signature Genes",
+           y = "Predicted Cell Groups") +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1),
+            axis.text.y = element_text(size = 10),
+            axis.title = element_text(size = 14, face = "bold"),          # 坐标轴标题
+            axis.line = element_line(color = "black", size = 0.8),
+            panel.grid.major = element_line(color = "gray80", size = 0.5), # 主网格线
+            panel.grid.minor =  element_blank()# 坐标轴线条
+      )
+    dev.off()
+  
 ``````
